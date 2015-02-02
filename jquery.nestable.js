@@ -38,12 +38,13 @@
             placeClass      : 'dd-placeholder',
             noDragClass     : 'dd-nodrag',
             emptyClass      : 'dd-empty',
+            origPosClass    : 'dd-origpos',
             expandBtnHTML   : '<button data-action="expand" type="button">Expand</button>',
             collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
             group           : 0,
             maxDepth        : 5,
             threshold       : 20,
-            onDrop          : function (item) {}
+            onDrop          : function (item) { return false; }
         };
 
     function Plugin(element, options)
@@ -245,7 +246,13 @@
         {
             li.removeClass(this.options.collapsedClass);
             li.children('[data-action]').remove();
-            li.children(this.options.listNodeName).remove();
+
+            // Only allow removal of this (empty list) when the origPosClass wasn't applied.
+            // If we don't do this (keep the empty list), reverting will fail.
+            // We'll be giving another removal chance after actually dropping.
+            if (!li.children(this.options.listNodeName).hasClass(this.options.origPosClass)) {
+                li.children(this.options.listNodeName).remove();
+            }
         },
 
         dragStart: function(e)
@@ -265,6 +272,9 @@
 
             this.dragEl = $(document.createElement(this.options.listNodeName)).addClass(this.options.listClass + ' ' + this.options.dragClass);
             this.dragEl.css('width', dragItem.width());
+
+            // Add an original position class (origPosClass) to the current list. This way, we'll know where the item was (after dropping).
+            dragItem.parent(this.options.listNodeName).addClass(this.options.origPosClass);
 
             dragItem.after(this.placeEl);
             dragItem[0].parentNode.removeChild(dragItem[0]);
@@ -293,13 +303,24 @@
             this.placeEl.replaceWith(el);
 
             this.dragEl.remove();
-            this.el.trigger('change');
-            if (this.hasNewRoot) {
-                this.dragRootEl.trigger('change');
-            }
-            this.reset();
             
-            this.options.onDrop(el);
+            // Did we revert? (Callback function, return true = revert) If so, find the origPosClass (attached to a list), remove the class, re-append the item.
+            if (this.options.onDrop(el)) {
+                this.dragRootEl.find("." + this.options.origPosClass).removeClass(this.options.origPosClass).append(el);
+            } else {
+                // Looks like we're not reverting.. Let's remove the class from the list
+                parent = this.dragRootEl.find("." + this.options.origPosClass).removeClass(this.options.origPosClass);
+                // Hm, no children? Let's give the unset function another chance (see unsetParent for more info)
+                if (!parent.children().length) {
+                    this.unsetParent(parent.parent());
+                }
+                this.el.trigger('change');
+                if (this.hasNewRoot) {
+                    this.dragRootEl.trigger('change');
+                }
+            }
+
+            this.reset();
         },
 
         dragMove: function(e)

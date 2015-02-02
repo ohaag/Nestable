@@ -47,6 +47,8 @@ Then activate with jQuery like so:
 
 The `onDrop` callback function is called when the dragged element is dropped.
 The dropped element is passed in parameter in his current state.
+When true is returned in the callback, the dropped item will be restored to it's original position.
+Defaults to false, resulting in default drag-drop behavior.
 
 ### Events
 
@@ -85,13 +87,22 @@ These advanced config options are also available:
 * `collapsedClass` The class applied to lists that have been collapsed (default `'dd-collapsed'`)
 * `placeClass` The class of the placeholder element (default `'dd-placeholder'`)
 * `emptyClass` The class used for empty list placeholder elements (default `'dd-empty'`)
+* `origPosClass` The class applied to the list the currently dragging list element was dragged from. (default `dd-origpos`)
 * `expandBtnHTML` The HTML text used to generate a list item expand button (default `'<button data-action="expand">Expand></button>'`)
 * `collapseBtnHTML` The HTML text used to generate a list item collapse button (default `'<button data-action="collapse">Collapse</button>'`)
-* `onDrop` callback function used when the dragged element is dropped (default `function (item) {}`)
+* `onDrop` callback function used when the dragged element is dropped (default `function (item) { return false; }`)
 
 **Inspect the [Nestable Demo](http://dbushell.github.com/Nestable/) for guidance.**
 
 ## Change Log
+
+### 2nd February 2015
+
+* Added functionality for returning the dropped list element to it's original position when returning true in the `onDrop` callback. 
+
+### 3rd December 2014
+
+* Added `onDrop` callback
 
 ### 15th October 2012
 
